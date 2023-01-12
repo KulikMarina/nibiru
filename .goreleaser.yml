@@ -1,18 +1,58 @@
-before:
-  hooks:
-    - sudo wget https://github.com/CosmWasm/wasmvm/releases/download/v1.1.1/libwasmvm_muslc.x86_64.a -O /lib/libwasmvm_muslc.a
-    - sudo apt install musl-dev
+project_name: nibid
+
+env:
+  - CGO_ENABLED=1
+
 builds:
+  - id: darwin-amd64
+    main: ./cmd/nibid
+    binary: nibid
+    goos:
+      - darwin
+    goarch:
+      - amd64
+    env:
+      - CC=o64-clang
+      - CXX=o64-clang++
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.commit={{.Commit}} -X main.date={{ .CommitDate }} -X github.com/cosmos/cosmos-sdk/version.Name=nibiru -X github.com/cosmos/cosmos-sdk/version.AppName=nibid -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }} -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }} -X github.com/tendermint/tendermint/version.TMCoreSemVer={{ .Env.TM_VERSION }}
+      - -linkmode=external
+    tags:
+      - netgo
+
+  - id: darwin-arm64
+    main: ./cmd/nibid
+    binary: nibid
+    goos:
+      - darwin
+    goarch:
+      - arm64
+    env:
+      - CC=oa64-clang
+      - CXX=oa64-clang++
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.commit={{.Commit}} -X main.date={{ .CommitDate }} -X github.com/cosmos/cosmos-sdk/version.Name=nibiru -X github.com/cosmos/cosmos-sdk/version.AppName=nibid -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }} -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }} -X github.com/tendermint/tendermint/version.TMCoreSemVer={{ .Env.TM_VERSION }}
+      - -linkmode=external
+    tags:
+      - netgo
+
   - id: linux-amd64
     main: ./cmd/nibid
     binary: nibid
+    hooks:
+      pre:
+        - wget https://github.com/CosmWasm/wasmvm/releases/download/v1.1.1/libwasmvm_muslc.x86_64.a -O /usr/lib/x86_64-linux-gnu/libwasmvm_muslc.a
     goos:
       - linux
     goarch:
       - amd64
     env:
-      - CGO_ENABLED=1
       - CC=x86_64-linux-gnu-gcc
+      - CXX=x86_64-linux-gnu-g++
     flags:
       - -mod=readonly
     ldflags:
@@ -23,3 +63,31 @@ builds:
       - netgo
       - muslc
 
+  - id: linux-arm64
+    main: ./cmd/nibid
+    binary: nibid
+    hooks:
+      pre:
+        - wget https://github.com/CosmWasm/wasmvm/releases/download/v1.1.1/libwasmvm_muslc.aarch64.a -O /usr/lib/aarch64-linux-gnu/libwasmvm_muslc.a
+    goos:
+      - linux
+    goarch:
+      - arm64
+    env:
+      - CC=aarch64-linux-gnu-gcc
+      - CXX=aarch64-linux-gnu-g++
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.commit={{.Commit}} -X main.date={{ .CommitDate }} -X github.com/cosmos/cosmos-sdk/version.Name=nibiru -X github.com/cosmos/cosmos-sdk/version.AppName=nibid -X github.com/cosmos/cosmos-sdk/version.Version={{ .Version }} -X github.com/cosmos/cosmos-sdk/version.Commit={{ .Commit }} -X github.com/tendermint/tendermint/version.TMCoreSemVer={{ .Env.TM_VERSION }}
+      - -linkmode=external
+      - -extldflags '-Wl,-z,muldefs -static -lm'
+    tags:
+      - netgo
+      - muslc
+
+universal_binaries:
+  - id: darwin-all
+    ids:
+      - darwin-amd64
+      - darwin-arm64
